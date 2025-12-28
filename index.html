@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerador de QR Code</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(circle at top left, #1c2a45 0%, #0b0f1c 45%, #06080f 100%);
+        color: #e8eefc;
+        display: flex;
+        justify-content: center;
+        padding: 32px;
+      }
+
+      .container {
+        width: min(1100px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .header,
+      .card {
+        background: rgba(15, 22, 38, 0.9);
+        border-radius: 22px;
+        border: 1px solid rgba(120, 140, 180, 0.25);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        padding: 28px;
+      }
+
+      .header h1 {
+        margin: 0 0 10px;
+        font-size: 34px;
+      }
+
+      .header p {
+        margin: 0;
+        color: #a6b1cc;
+        font-size: 16px;
+      }
+
+      .card {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 32px;
+        align-items: stretch;
+      }
+
+      @media (max-width: 900px) {
+        .card {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .tabs {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .tab-button {
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(133, 155, 200, 0.4);
+        background: transparent;
+        color: #e8eefc;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .tab-button.active {
+        background: #5b83ff;
+        color: #081021;
+        border-color: transparent;
+        box-shadow: 0 8px 20px rgba(91, 131, 255, 0.4);
+      }
+
+      .form-section {
+        margin-top: 24px;
+        display: grid;
+        gap: 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 8px;
+        font-size: 14px;
+        color: #c7d4f0;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(120, 140, 180, 0.35);
+        background: rgba(8, 14, 27, 0.9);
+        color: #f5f8ff;
+        font-size: 15px;
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .button {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 22px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .button.primary {
+        background: #5b83ff;
+        color: #081021;
+        box-shadow: 0 12px 30px rgba(91, 131, 255, 0.4);
+      }
+
+      .button.secondary {
+        background: rgba(16, 26, 44, 0.9);
+        color: #f5f8ff;
+        border: 1px solid rgba(133, 155, 200, 0.4);
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .note {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 14px;
+        color: #aab7d3;
+        margin-top: 14px;
+        line-height: 1.5;
+      }
+
+      .note strong {
+        color: #b9d1ff;
+      }
+
+      .preview {
+        background: #f9fbff;
+        border-radius: 24px;
+        padding: 24px;
+        display: grid;
+        place-items: center;
+        min-height: 360px;
+      }
+
+      canvas {
+        width: min(300px, 100%);
+        height: auto;
+        background: #fff;
+        border-radius: 12px;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .status {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #ffb84f;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <section class="header">
+        <h1>Gerador de QR Code</h1>
+        <p>Universal (lê em qualquer celular) — offline com arquivo local</p>
+      </section>
+
+      <section class="card">
+        <div>
+          <div class="tabs" role="tablist">
+            <button class="tab-button active" data-tab="site" type="button">Site</button>
+            <button class="tab-button" data-tab="wifi" type="button">Wi-Fi</button>
+            <button class="tab-button" data-tab="contato" type="button">Contato</button>
+            <button class="tab-button" data-tab="texto" type="button">Texto</button>
+          </div>
+
+          <div class="form-section">
+            <div class="tab-content" data-content="site">
+              <label>
+                URL
+                <input id="site-url" type="url" placeholder="https://seudominio.com.br" />
+              </label>
+            </div>
+
+            <div class="tab-content hidden" data-content="wifi">
+              <div class="form-grid">
+                <label>
+                  Nome da rede (SSID)
+                  <input id="wifi-ssid" type="text" placeholder="MinhaRedeWifi" />
+                </label>
+                <label>
+                  Senha
+                  <input id="wifi-password" type="text" placeholder="Senha123" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Segurança
+                  <select id="wifi-security">
+                    <option value="WPA">WPA/WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="nopass">Sem senha</option>
+                  </select>
+                </label>
+                <label>
+                  Rede oculta?
+                  <select id="wifi-hidden">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" data-content="contato">
+              <div class="form-grid">
+                <label>
+                  Nome completo
+                  <input id="contact-name" type="text" placeholder="Nome Sobrenome" />
+                </label>
+                <label>
+                  Empresa
+                  <input id="contact-company" type="text" placeholder="Minha Empresa" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Cargo
+                  <input id="contact-title" type="text" placeholder="Cargo" />
+                </label>
+                <label>
+                  Telefone
+                  <input id="contact-phone" type="tel" placeholder="+55 11 90000-0000" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Email
+                  <input id="contact-email" type="email" placeholder="email@exemplo.com" />
+                </label>
+                <label>
+                  Site
+                  <input id="contact-website" type="url" placeholder="https://meusite.com.br" />
+                </label>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" data-content="texto">
+              <label>
+                Texto
+                <textarea id="text-content" placeholder="Escreva aqui o texto livre..."></textarea>
+              </label>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Qualidade
+                <select id="qr-quality">
+                  <option value="L">L (mais rápido)</option>
+                  <option value="M">M (equilíbrio)</option>
+                  <option value="Q">Q (mais seguro)</option>
+                  <option value="H">H (mais dados)</option>
+                </select>
+              </label>
+              <label>
+                Tamanho
+                <select id="qr-size">
+                  <option value="240">Compacto</option>
+                  <option value="320" selected>Normal (8x)</option>
+                  <option value="420">Grande</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="actions">
+              <button class="button primary" id="generate" type="button">Gerar QR</button>
+              <button class="button secondary" id="download" type="button">Baixar PNG</button>
+            </div>
+
+            <div class="note">
+              <span>✅</span>
+              <div>
+                <strong>Para ficar 100% offline:</strong>
+                <div>1) Coloque <code>qrcode.min.js</code> na mesma pasta deste index.html.</div>
+                <div>2) Se não encontrar, o sistema tenta baixar via CDN.</div>
+              </div>
+            </div>
+
+            <div class="status" id="status"></div>
+          </div>
+        </div>
+
+        <div class="preview">
+          <canvas id="qrCanvas" width="320" height="320" aria-label="Prévia do QR Code"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <script src="./qrcode.min.js"></script>
+    <script>
+      const statusEl = document.getElementById("status");
+      const canvas = document.getElementById("qrCanvas");
+      const generateButton = document.getElementById("generate");
+      const downloadButton = document.getElementById("download");
+      const tabButtons = document.querySelectorAll(".tab-button");
+      const tabContents = document.querySelectorAll(".tab-content");
+      let activeTab = "site";
+
+      function ensureLibrary() {
+        if (window.QRCode) return Promise.resolve(true);
+        return new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.head.appendChild(script);
+        });
+      }
+
+      function updateStatus(message, isWarning = false) {
+        statusEl.textContent = message;
+        statusEl.style.color = isWarning ? "#ffb84f" : "#8be68b";
+      }
+
+      function getPayload() {
+        if (activeTab === "site") {
+          return document.getElementById("site-url").value.trim();
+        }
+
+        if (activeTab === "wifi") {
+          const ssid = document.getElementById("wifi-ssid").value.trim();
+          const password = document.getElementById("wifi-password").value.trim();
+          const security = document.getElementById("wifi-security").value;
+          const hidden = document.getElementById("wifi-hidden").value;
+          return `WIFI:T:${security};S:${ssid};P:${password};H:${hidden};;`;
+        }
+
+        if (activeTab === "contato") {
+          const name = document.getElementById("contact-name").value.trim();
+          const company = document.getElementById("contact-company").value.trim();
+          const title = document.getElementById("contact-title").value.trim();
+          const phone = document.getElementById("contact-phone").value.trim();
+          const email = document.getElementById("contact-email").value.trim();
+          const website = document.getElementById("contact-website").value.trim();
+          return [
+            "BEGIN:VCARD",
+            "VERSION:3.0",
+            `FN:${name}`,
+            company ? `ORG:${company}` : "",
+            title ? `TITLE:${title}` : "",
+            phone ? `TEL;TYPE=CELL:${phone}` : "",
+            email ? `EMAIL:${email}` : "",
+            website ? `URL:${website}` : "",
+            "END:VCARD",
+          ]
+            .filter(Boolean)
+            .join("\n");
+        }
+
+        return document.getElementById("text-content").value.trim();
+      }
+
+      function generateQr() {
+        const payload = getPayload();
+        if (!payload) {
+          updateStatus("Preencha o conteúdo antes de gerar.", true);
+          return;
+        }
+
+        const quality = document.getElementById("qr-quality").value;
+        const size = Number(document.getElementById("qr-size").value);
+
+        QRCode.toCanvas(
+          canvas,
+          payload,
+          {
+            errorCorrectionLevel: quality,
+            width: size,
+            margin: 1,
+            color: {
+              dark: "#000000",
+              light: "#ffffff",
+            },
+          },
+          (error) => {
+            if (error) {
+              updateStatus("Erro ao gerar QR Code. Verifique o conteúdo.", true);
+              return;
+            }
+            updateStatus("QR Code gerado com sucesso!");
+          }
+        );
+      }
+
+      function downloadPng() {
+        const link = document.createElement("a");
+        link.download = "qrcode.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }
+
+      tabButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          activeTab = button.dataset.tab;
+          tabButtons.forEach((item) => item.classList.remove("active"));
+          button.classList.add("active");
+          tabContents.forEach((content) => {
+            content.classList.toggle("hidden", content.dataset.content !== activeTab);
+          });
+          updateStatus("");
+        });
+      });
+
+      generateButton.addEventListener("click", generateQr);
+      downloadButton.addEventListener("click", downloadPng);
+
+      ensureLibrary().then((loaded) => {
+        if (!loaded) {
+          updateStatus(
+            "Biblioteca QR Code não carregada. Adicione qrcode.min.js local.",
+            true
+          );
+          return;
+        }
+        updateStatus("Pronto para gerar!");
+      });
+    </script>
+  </body>
+</html>
