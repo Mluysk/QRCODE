@@ -362,14 +362,27 @@
         statusEl.style.color = isWarning ? "#ffb84f" : "#8be68b";
       }
 
+      function normalizeUrl(url) {
+        if (!url) return "";
+        if (url.startsWith("http://") || url.startsWith("https://")) return url;
+        return `https://${url}`;
+      }
+
+      function escapeWifi(value) {
+        return value.replace(/([\\\\;,:"])/g, "\\\\$1");
+      }
+
       function getPayload() {
         if (activeTab === "site") {
-          return document.getElementById("site-url").value.trim();
+          const url = document.getElementById("site-url").value.trim();
+          return normalizeUrl(url);
         }
 
         if (activeTab === "wifi") {
-          const ssid = document.getElementById("wifi-ssid").value.trim();
-          const password = document.getElementById("wifi-password").value.trim();
+          const ssid = escapeWifi(document.getElementById("wifi-ssid").value.trim());
+          const password = escapeWifi(
+            document.getElementById("wifi-password").value.trim()
+          );
           const security = document.getElementById("wifi-security").value;
           const hidden = document.getElementById("wifi-hidden").value;
           return `WIFI:T:${security};S:${ssid};P:${password};H:${hidden};;`;
@@ -410,13 +423,16 @@
         const quality = document.getElementById("qr-quality").value;
         const size = Number(document.getElementById("qr-size").value);
 
+        canvas.width = size;
+        canvas.height = size;
+
         QRCode.toCanvas(
           canvas,
           payload,
           {
             errorCorrectionLevel: quality,
             width: size,
-            margin: 1,
+            margin: 4,
             color: {
               dark: "#000000",
               light: "#ffffff",
