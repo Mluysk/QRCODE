@@ -212,6 +212,10 @@
             <button class="tab-button" data-tab="wifi" type="button">Wi-Fi</button>
             <button class="tab-button" data-tab="contato" type="button">Contato</button>
             <button class="tab-button" data-tab="texto" type="button">Texto</button>
+            <button class="tab-button" data-tab="email" type="button">Email</button>
+            <button class="tab-button" data-tab="sms" type="button">SMS</button>
+            <button class="tab-button" data-tab="telefone" type="button">Telefone</button>
+            <button class="tab-button" data-tab="local" type="button">Local</button>
           </div>
 
           <div class="form-section">
@@ -289,6 +293,60 @@
               <label>
                 Texto
                 <textarea id="text-content" placeholder="Escreva aqui o texto livre..."></textarea>
+              </label>
+            </div>
+
+            <div class="tab-content hidden" data-content="email">
+              <div class="form-grid">
+                <label>
+                  Email
+                  <input id="email-address" type="email" placeholder="contato@exemplo.com" />
+                </label>
+                <label>
+                  Assunto
+                  <input id="email-subject" type="text" placeholder="Assunto do email" />
+                </label>
+              </div>
+              <label>
+                Mensagem
+                <textarea id="email-body" placeholder="Digite a mensagem do email..."></textarea>
+              </label>
+            </div>
+
+            <div class="tab-content hidden" data-content="sms">
+              <div class="form-grid">
+                <label>
+                  Número
+                  <input id="sms-number" type="tel" placeholder="+55 11 90000-0000" />
+                </label>
+                <label>
+                  Mensagem
+                  <input id="sms-message" type="text" placeholder="Mensagem rápida..." />
+                </label>
+              </div>
+            </div>
+
+            <div class="tab-content hidden" data-content="telefone">
+              <label>
+                Número de telefone
+                <input id="phone-number" type="tel" placeholder="+55 11 90000-0000" />
+              </label>
+            </div>
+
+            <div class="tab-content hidden" data-content="local">
+              <div class="form-grid">
+                <label>
+                  Latitude
+                  <input id="geo-lat" type="text" placeholder="-23.550520" />
+                </label>
+                <label>
+                  Longitude
+                  <input id="geo-lng" type="text" placeholder="-46.633308" />
+                </label>
+              </div>
+              <label>
+                Nome do local (opcional)
+                <input id="geo-label" type="text" placeholder="Meu ponto" />
               </label>
             </div>
 
@@ -408,6 +466,42 @@
           ]
             .filter(Boolean)
             .join("\n");
+        }
+
+        if (activeTab === "email") {
+          const address = document.getElementById("email-address").value.trim();
+          const subject = document.getElementById("email-subject").value.trim();
+          const body = document.getElementById("email-body").value.trim();
+          if (!address) return "";
+          const params = new URLSearchParams();
+          if (subject) params.set("subject", subject);
+          if (body) params.set("body", body);
+          const suffix = params.toString() ? `?${params.toString()}` : "";
+          return `mailto:${address}${suffix}`;
+        }
+
+        if (activeTab === "sms") {
+          const number = document.getElementById("sms-number").value.trim();
+          const message = document.getElementById("sms-message").value.trim();
+          if (!number && !message) return "";
+          const params = new URLSearchParams();
+          if (message) params.set("body", message);
+          const suffix = params.toString() ? `?${params.toString()}` : "";
+          return `sms:${number}${suffix}`;
+        }
+
+        if (activeTab === "telefone") {
+          const number = document.getElementById("phone-number").value.trim();
+          return number ? `tel:${number}` : "";
+        }
+
+        if (activeTab === "local") {
+          const lat = document.getElementById("geo-lat").value.trim();
+          const lng = document.getElementById("geo-lng").value.trim();
+          const label = document.getElementById("geo-label").value.trim();
+          if (!lat || !lng) return "";
+          const coords = `${lat},${lng}`;
+          return label ? `geo:${coords}?q=${encodeURIComponent(label)}` : `geo:${coords}`;
         }
 
         return document.getElementById("text-content").value.trim();
