@@ -305,6 +305,15 @@
               </span>
               Local
             </button>
+            <button class="tab-button" data-tab="whatsapp" type="button">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M6 19l-1 4 4-1a9 9 0 1 0-3-3z"></path>
+                  <path d="M9 9c0 4 6 6 6 6l2-2-2-1-1 1c-1.5-.7-2.8-2-3.5-3.5l1-1-1-2-2 2z"></path>
+                </svg>
+              </span>
+              WhatsApp
+            </button>
           </div>
 
           <div class="form-section">
@@ -437,6 +446,19 @@
                 Nome do local (opcional)
                 <input id="geo-label" type="text" placeholder="Meu ponto" />
               </label>
+            </div>
+
+            <div class="tab-content hidden" data-content="whatsapp">
+              <div class="form-grid">
+                <label>
+                  Número (com DDI)
+                  <input id="wa-number" type="tel" placeholder="5511900000000" />
+                </label>
+                <label>
+                  Mensagem
+                  <input id="wa-message" type="text" placeholder="Olá! Gostaria de saber mais." />
+                </label>
+              </div>
             </div>
 
             <div class="form-grid">
@@ -582,6 +604,19 @@
           if (!lat || !lng) return "";
           const coords = `${lat},${lng}`;
           return label ? `geo:${coords}?q=${encodeURIComponent(label)}` : `geo:${coords}`;
+        }
+
+        if (activeTab === "whatsapp") {
+          const number = document.getElementById("wa-number").value.trim();
+          const message = document.getElementById("wa-message").value.trim();
+          if (!number && !message) return "";
+          const params = new URLSearchParams();
+          if (message) params.set("text", message);
+          const suffix = params.toString() ? `?${params.toString()}` : "";
+          if (number) {
+            return `https://wa.me/${number}${suffix}`;
+          }
+          return `https://wa.me/${suffix.replace("?", "")}`;
         }
 
         return document.getElementById("text-content").value.trim();
