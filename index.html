@@ -79,6 +79,9 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .tab-button.active {
@@ -208,14 +211,38 @@
       <section class="card">
         <div>
           <div class="tabs" role="tablist">
-            <button class="tab-button active" data-tab="site" type="button">Site</button>
-            <button class="tab-button" data-tab="wifi" type="button">Wi-Fi</button>
-            <button class="tab-button" data-tab="contato" type="button">Contato</button>
-            <button class="tab-button" data-tab="texto" type="button">Texto</button>
-            <button class="tab-button" data-tab="email" type="button">Email</button>
-            <button class="tab-button" data-tab="sms" type="button">SMS</button>
-            <button class="tab-button" data-tab="telefone" type="button">Telefone</button>
-            <button class="tab-button" data-tab="local" type="button">Local</button>
+            <button class="tab-button active" data-tab="site" type="button">
+              <span class="icon">🌐</span>
+              Site
+            </button>
+            <button class="tab-button" data-tab="wifi" type="button">
+              <span class="icon">📶</span>
+              Wi-Fi
+            </button>
+            <button class="tab-button" data-tab="contato" type="button">
+              <span class="icon">👤</span>
+              Contato
+            </button>
+            <button class="tab-button" data-tab="texto" type="button">
+              <span class="icon">📝</span>
+              Texto
+            </button>
+            <button class="tab-button" data-tab="email" type="button">
+              <span class="icon">✉️</span>
+              Email
+            </button>
+            <button class="tab-button" data-tab="sms" type="button">
+              <span class="icon">💬</span>
+              SMS
+            </button>
+            <button class="tab-button" data-tab="telefone" type="button">
+              <span class="icon">📞</span>
+              Telefone
+            </button>
+            <button class="tab-button" data-tab="local" type="button">
+              <span class="icon">📍</span>
+              Local
+            </button>
           </div>
 
           <div class="form-section">
@@ -577,3 +604,7 @@
     </script>
   </body>
 </html>
+      .tab-button .icon {
+        font-size: 16px;
+        line-height: 1;
+      }
