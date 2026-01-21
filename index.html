@@ -314,6 +314,17 @@
               </span>
               WhatsApp
             </button>
+            <button class="tab-button" data-tab="pix" type="button">
+              <span class="icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M7 4h10v4H7z"></path>
+                  <path d="M5 10h14v10H5z"></path>
+                  <path d="M9 13h6"></path>
+                  <path d="M9 17h4"></path>
+                </svg>
+              </span>
+              PIX
+            </button>
           </div>
 
           <div class="form-section">
@@ -461,6 +472,39 @@
               </div>
             </div>
 
+            <div class="tab-content hidden" data-content="pix">
+              <div class="form-grid">
+                <label>
+                  Chave PIX
+                  <input id="pix-key" type="text" placeholder="email@exemplo.com" />
+                </label>
+                <label>
+                  Nome do recebedor
+                  <input id="pix-name" type="text" placeholder="NOME DO RECEBEDOR" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  Cidade
+                  <input id="pix-city" type="text" placeholder="SAO PAULO" />
+                </label>
+                <label>
+                  Valor (opcional)
+                  <input id="pix-amount" type="number" step="0.01" placeholder="0.00" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label>
+                  TXID (opcional)
+                  <input id="pix-txid" type="text" placeholder="***" />
+                </label>
+                <label>
+                  Descrição (opcional)
+                  <input id="pix-desc" type="text" placeholder="Pagamento" />
+                </label>
+              </div>
+            </div>
+
             <div class="form-grid">
               <label>
                 Qualidade
@@ -530,6 +574,61 @@
 
       function escapeWifi(value) {
         return value.replace(/([\\\\;,:"])/g, "\\\\$1");
+      }
+
+      function buildTlv(id, value) {
+        const length = String(value.length).padStart(2, "0");
+        return `${id}${length}${value}`;
+      }
+
+      function crc16(payload) {
+        let crc = 0xffff;
+        for (let i = 0; i < payload.length; i += 1) {
+          crc ^= payload.charCodeAt(i) << 8;
+          for (let bit = 0; bit < 8; bit += 1) {
+            if (crc & 0x8000) {
+              crc = ((crc << 1) ^ 0x1021) & 0xffff;
+            } else {
+              crc = (crc << 1) & 0xffff;
+            }
+          }
+        }
+        return crc.toString(16).toUpperCase().padStart(4, "0");
+      }
+
+      function buildPixPayload() {
+        const key = document.getElementById("pix-key").value.trim();
+        if (!key) return "";
+        const name = document.getElementById("pix-name").value.trim() || "RECEBEDOR";
+        const city = document.getElementById("pix-city").value.trim() || "CIDADE";
+        const amountRaw = document.getElementById("pix-amount").value.trim();
+        const txid = document.getElementById("pix-txid").value.trim() || "***";
+        const description = document.getElementById("pix-desc").value.trim();
+
+        let merchantAccount = buildTlv("00", "BR.GOV.BCB.PIX");
+        merchantAccount += buildTlv("01", key);
+        if (description) {
+          merchantAccount += buildTlv("02", description);
+        }
+
+        let payload = "";
+        payload += buildTlv("00", "01");
+        payload += buildTlv("01", "12");
+        payload += buildTlv("26", merchantAccount);
+        payload += buildTlv("52", "0000");
+        payload += buildTlv("53", "986");
+        if (amountRaw) {
+          const amount = Number(amountRaw).toFixed(2);
+          payload += buildTlv("54", amount);
+        }
+        payload += buildTlv("58", "BR");
+        payload += buildTlv("59", name.substring(0, 25));
+        payload += buildTlv("60", city.substring(0, 15));
+        payload += buildTlv("62", buildTlv("05", txid.substring(0, 25)));
+
+        const payloadToCrc = `${payload}6304`;
+        const crc = crc16(payloadToCrc);
+        return `${payloadToCrc}${crc}`;
       }
 
       function getPayload() {
@@ -617,6 +716,10 @@
             return `https://wa.me/${number}${suffix}`;
           }
           return `https://wa.me/${suffix.replace("?", "")}`;
+        }
+
+        if (activeTab === "pix") {
+          return buildPixPayload();
         }
 
         return document.getElementById("text-content").value.trim();
